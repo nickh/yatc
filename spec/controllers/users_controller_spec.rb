@@ -9,7 +9,7 @@ describe UsersController do
       get :show, :id => @user
     end
 
-    it 'should be successful' do
+    it 'succeeds' do
       response.should be_success
     end
 
@@ -31,7 +31,7 @@ describe UsersController do
   end
 
   describe "GET 'new'" do
-    it "should be successful" do
+    it "succeeds" do
       get 'new'
       response.should be_success
     end
@@ -42,4 +42,54 @@ describe UsersController do
     end
   end
 
+  describe "POST 'create'" do
+    describe 'failure' do
+      before(:each) do
+        @user_attr = {:name => '', :email => '', :password => '', :password_confirmation => ''}
+      end
+
+      it 'does not create a user' do
+        lambda do
+          post :create, :user => @user_attrs
+        end.should_not change(User, :count)
+      end
+
+      it 'has the right title' do
+        post :create, :user => @user_attrs
+        response.should have_selector('title', :content => 'Sign Up')
+      end
+
+      it "renders the 'new' page" do
+        post :create, :user => @user_attrs
+        response.should render_template('new')
+      end
+    end
+
+    describe 'success' do
+      before(:each) do
+        @user_attrs = {
+          :name                  => 'New User',
+          :email                 => 'user@example.com',
+          :password              => 'foobar',
+          :password_confirmation => 'foobar'
+        }
+      end
+
+      it 'creates a user' do
+        lambda do
+          post :create, :user => @user_attrs
+        end.should change(User, :count).by(1)
+      end
+
+      it 'redirects to the user show page' do
+        post :create, :user => @user_attrs
+        response.should redirect_to(user_path(assigns(:user)))
+      end
+
+      it 'has a welcome message' do
+        post :create, :user => @user_attrs
+        flash[:success].should =~ /welcome to the sample app/i
+      end
+    end
+  end
 end
