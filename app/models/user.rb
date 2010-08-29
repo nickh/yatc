@@ -35,6 +35,12 @@ class User < ActiveRecord::Base
     end
   end
 
+  def self.authenticate_with_salt(id, cookie_salt)
+    if user = find_by_id(id)
+      return user if user.salt == cookie_salt
+    end
+  end
+
   # Return true if the user's password matches the submitted password
   def password_matches?(submitted_password)
     encrypted_password == encrypt(submitted_password)
