@@ -58,6 +58,10 @@ describe "LayoutLinks" do
       response.should have_selector('a', :href => signout_path, :content => 'Sign out')
     end
 
+    it 'has an all users link' do
+      response.should have_selector('a', :href => users_path, :content => 'Users')
+    end
+
     it 'has a profile link' do
       response.should have_selector('a', :href => user_path(@user), :content => 'Profile')
     end

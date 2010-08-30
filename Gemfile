@@ -7,6 +7,7 @@ gem 'gravatar_image_tag'
 group :development do
   gem 'rspec-rails', '2.0.0.beta.18'
   gem 'annotate-models'
+  gem 'faker', '0.3.1'
   gem 'wirble'
 end
 
