@@ -97,4 +97,112 @@ describe UsersController do
       end
     end
   end
+
+  describe "GET 'edit'" do
+    before(:each) do
+      @user = Factory(:user)
+      test_sign_in(@user)
+      get :edit, :id => @user
+    end
+
+    it 'succeeds' do
+      response.should be_success
+    end
+
+    it 'has the right title' do
+      response.should have_selector('title', :content => 'Edit user')
+    end
+
+    it 'has a link to change the Gravatar' do
+      gravatar_url = 'http://gravatar.com/emails'
+      response.should have_selector('a', :href => gravatar_url, :content => 'change')
+    end
+  end
+
+  describe "PUT 'update'" do
+    before(:each) do
+      @user = Factory(:user)
+      test_sign_in(@user)
+    end
+
+    context 'failure' do
+      before(:each) do
+        @invalid_user_attrs = {:name => '', :email => ''}
+      end
+
+      it "renders the 'edit' page" do
+        put :update, :id => @user, :user => @invalid_user_attrs
+        response.should render_template('edit')
+      end
+
+      it 'has the right title' do
+        put :update, :id => @user, :user => @invalid_user_attrs
+        response.should have_selector('title', :content => 'Edit user')
+      end
+    end
+
+    context 'success' do
+      before(:each) do
+        @valid_user_attrs = {
+          :name                  => 'New Name',
+          :email                 => 'user@example.org',
+          :password              => 'barbaz',
+          :password_confirmation => 'barbaz',
+        }
+      end
+
+      it "changes the user's attributes" do
+        put :update, :id => @user, :user => @valid_user_attrs
+        user = assigns(:user)
+        @user.reload
+        @user.name.should  == user.name
+        @user.email.should == user.email
+      end
+
+      it 'redirects to the user show page' do
+        put :update, :id => @user, :user => @valid_user_attrs
+        response.should redirect_to(user_path(@user))
+      end
+
+      it 'has a flash message' do
+        put :update, :id => @user, :user => @valid_user_attrs
+        flash[:success].should =~ /updated/
+      end
+    end
+  end
+
+  describe 'authentication of edit/update pages' do
+    before(:each) do
+      @user = Factory(:user)
+    end
+
+    context 'for non-signed-in users' do
+      it "denies access to 'edit'" do
+        get :edit, :id => @user
+        response.should redirect_to(signin_path)
+      end
+
+      it "denies access to 'update'" do
+        put :update, :id => @user, :user => {}
+        response.should redirect_to(signin_path)
+      end
+    end
+
+    context 'for signed-in users' do
+      before(:each) do
+        wrong_user = Factory(:user, :email => 'user@example.net')
+        test_sign_in(wrong_user)
+      end
+
+      it 'requires matching users for #edit' do
+        get :edit, :id => @user
+        response.should redirect_to(root_path)
+      end
+
+      it 'requires matching users for #update' do
+        put :update, :id => @user, :user => {}
+        response.should redirect_to(root_path)
+      end
+    end
+  end
 end
