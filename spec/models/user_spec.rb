@@ -14,6 +14,25 @@ describe User do
     User.create!(@user_attrs)
   end
 
+  describe 'admin attribute' do
+    before(:each) do
+      @user = User.create!(@user_attrs)
+    end
+
+    it 'responds to admin' do
+      @user.should respond_to(:admin)
+    end
+
+    it 'is not admin by default' do
+      @user.should_not be_admin
+    end
+
+    it 'can be set on' do
+      @user.toggle!(:admin)
+      @user.should be_admin
+    end
+  end
+
   context 'name validation' do
     it 'requires a name' do
       user = User.new(@user_attrs.merge(:name => ''))
