@@ -51,4 +51,34 @@ describe "Users" do
       end
     end
   end
+
+  describe 'user list' do
+    context 'as a non-admin user' do
+      before(:each) do
+        integration_sign_in Factory(:user)
+        click_link 'Users'
+      end
+
+      it 'does not have delete links' do
+        response.should_not have_selector('a', :content => 'delete')
+      end
+    end
+
+    context 'as an admin user' do
+      before(:each) do
+        @admin_user = Factory(:user, :admin => true)
+        @other_user = Factory(:user, :email => 'other_user@example.com')
+        integration_sign_in @admin_user
+        click_link 'Users'
+      end
+
+      it 'has delete links for other accounts' do
+        response.should have_selector('a', :content => 'delete', :href => user_path(@other_user))
+      end
+
+      it 'does not have a delete link for their own account' do
+        response.should_not have_selector('a', :content => 'delete', :href => user_path(@admin_user))
+      end
+    end
+  end
 end

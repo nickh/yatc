@@ -77,14 +77,27 @@ describe UsersController do
   end
 
   describe "GET 'new'" do
-    it "succeeds" do
-      get 'new'
-      response.should be_success
+    context 'as a non-signed-in user' do
+      it "succeeds" do
+        get 'new'
+        response.should be_success
+      end
+
+      it 'has the right title' do
+        get 'new'
+        response.should have_selector('title', :content => 'Sign Up')
+      end
     end
 
-    it 'has the right title' do
-      get 'new'
-      response.should have_selector('title', :content => 'Sign Up')
+    context 'as a signed-in user' do
+      before(:each) do
+        test_sign_in(Factory(:user))
+      end
+
+      it 'redirects to the home page' do
+        get 'new'
+        response.should redirect_to(root_path)
+      end
     end
   end
 
@@ -94,20 +107,33 @@ describe UsersController do
         @user_attr = {:name => '', :email => '', :password => '', :password_confirmation => ''}
       end
 
-      it 'does not create a user' do
-        lambda do
+      context 'as a non-signed-in user' do
+        it 'does not create a user' do
+          lambda do
+            post :create, :user => @user_attrs
+          end.should_not change(User, :count)
+        end
+
+        it 'has the right title' do
           post :create, :user => @user_attrs
-        end.should_not change(User, :count)
+          response.should have_selector('title', :content => 'Sign Up')
+        end
+
+        it "renders the 'new' page" do
+          post :create, :user => @user_attrs
+          response.should render_template('new')
+        end
       end
 
-      it 'has the right title' do
-        post :create, :user => @user_attrs
-        response.should have_selector('title', :content => 'Sign Up')
-      end
+      context 'as a signed-in user' do
+        before(:each) do
+          test_sign_in(Factory(:user))
+        end
 
-      it "renders the 'new' page" do
-        post :create, :user => @user_attrs
-        response.should render_template('new')
+        it 'redirects to the home page' do
+          post :create, :user => @user_attrs
+          response.should redirect_to(root_path)
+        end
       end
     end
 
@@ -121,25 +147,38 @@ describe UsersController do
         }
       end
 
-      it 'creates a user' do
-        lambda do
+      context 'as a non-signed-in user' do
+        it 'creates a user' do
+          lambda do
+            post :create, :user => @user_attrs
+          end.should change(User, :count).by(1)
+        end
+
+        it 'redirects to the user show page' do
           post :create, :user => @user_attrs
-        end.should change(User, :count).by(1)
+          response.should redirect_to(user_path(assigns(:user)))
+        end
+
+        it 'has a welcome message' do
+          post :create, :user => @user_attrs
+          flash[:success].should =~ /welcome to the sample app/i
+        end
+
+        it 'signs the user in' do
+          post :create, :user => @user_attrs
+          controller.should be_signed_in
+        end
       end
 
-      it 'redirects to the user show page' do
-        post :create, :user => @user_attrs
-        response.should redirect_to(user_path(assigns(:user)))
-      end
+      context 'as a signed-in user' do
+        before(:each) do
+          test_sign_in(Factory(:user))
+        end
 
-      it 'has a welcome message' do
-        post :create, :user => @user_attrs
-        flash[:success].should =~ /welcome to the sample app/i
-      end
-
-      it 'signs the user in' do
-        post :create, :user => @user_attrs
-        controller.should be_signed_in
+        it 'redirects to the home page' do
+          post :create, :user => @user_attrs
+          response.should redirect_to(root_path)
+        end
       end
     end
   end
@@ -239,19 +278,29 @@ describe UsersController do
 
     context 'as an admin user' do
       before(:each) do
-        admin = Factory(:user, :email => 'admin@example.com', :admin => true)
-        test_sign_in(admin)
+        @admin = Factory(:user, :email => 'admin@example.com', :admin => true)
+        test_sign_in(@admin)
       end
 
-      it 'destroys the user' do
-        lambda do
+      context 'deleting another user' do
+        it 'destroys the user' do
+          lambda do
+            delete :destroy, :id => @user
+          end.should change(User, :count).by(-1)
+        end
+
+        it 'redirects to the users page' do
           delete :destroy, :id => @user
-        end.should change(User, :count).by(-1)
+          response.should redirect_to(users_path)
+        end
       end
 
-      it 'redirects to the users page' do
-        delete :destroy, :id => @user
-        response.should redirect_to(users_path)
+      context 'deleting themselves' do
+        it 'does not destroy the user' do
+          delete :destroy, :id => @admin
+          flash[:notice].should =~ /destroy yourself/i
+          response.should redirect_to(user_path(@admin))
+        end
       end
     end
   end
