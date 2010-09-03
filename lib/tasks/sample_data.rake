@@ -18,5 +18,9 @@ namespace :db do
                    :password              => password,
                    :password_confirmation => password)
     end
+
+    User.find(:all, :limit => 6).each do |user|
+      50.times {|i| user.microposts.create!(:content => Faker::Lorem.sentence(5))}
+    end
   end
 end
