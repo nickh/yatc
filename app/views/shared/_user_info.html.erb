@@ -5,7 +5,11 @@
       <%= current_user.name %>
     </span>
     <span class='microposts'>
-      <%= pluralize(current_user.microposts.count, 'micropost') %>
+      <% if current_user.microposts.empty? %>
+        No microposts
+      <% else %>
+        <%= pluralize(current_user.microposts.count, 'micropost') %>
+      <% end %>
     </span>
   </a>
 </div>

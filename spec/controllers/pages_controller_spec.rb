@@ -7,7 +7,7 @@ describe PagesController do
     @base_title = 'Ruby on Rails Tutorial Sample App | '
   end
 
-  describe "GET 'home'" do
+  describe 'GET #home' do
     it "succeeds" do
       get 'home'
       response.should be_success
@@ -16,6 +16,43 @@ describe PagesController do
     it "has the right title" do
       get 'home'
       response.should have_selector('title', :content => @base_title + 'Home')
+    end
+
+    it 'wraps long words in microposts' do
+      user = test_sign_in(Factory(:user))
+      too_long_word = 'loremipsum'*13
+      Factory(:micropost, :user => user, :content => too_long_word)
+      get :home
+      response.body.should =~ /loremipsum\s*&#8203;/
+    end
+
+    context 'for a signed-in user' do
+      before(:each) do
+        @user = test_sign_in(Factory(:user))
+      end
+
+      context 'with no microposts' do
+        it 'displays the micropost count' do
+          get :home
+          response.should have_selector('span.microposts', :content => 'No microposts')
+        end
+      end
+
+      context 'with one micropost' do
+        it 'displays the micropost count' do
+          Factory(:micropost, :user => @user)
+          get :home
+          response.should have_selector('span.microposts', :content => '1 micropost')
+        end
+      end
+
+      context 'with more than one micropost' do
+        it 'displays the micropost count' do
+          2.times {|i| Factory(:micropost, :user => @user)}
+          get :home
+          response.should have_selector('span.microposts', :content => '2 microposts')
+        end
+      end
     end
   end
 
