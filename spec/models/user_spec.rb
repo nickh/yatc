@@ -197,4 +197,60 @@ describe User do
       end
     end
   end
+
+  describe 'relationships association' do
+    before(:each) do
+      @user = User.create!(@user_attrs)
+      @followed = Factory(:user)
+    end
+
+    it 'exists' do
+      @user.should respond_to(:relationships)
+    end
+
+    it 'provides reverse relationships' do
+      @user.should respond_to(:reverse_relationships)
+    end
+
+    it 'has a following' do
+      @user.should respond_to(:following)
+    end
+
+    it 'has followers' do
+      @user.should respond_to(:followers)
+    end
+
+    it 'knows if a user is following another' do
+      @user.should respond_to(:following?)
+    end
+
+    it 'allows a user to follow another' do
+      @user.should respond_to(:follow!)
+    end
+
+    it 'allows a user to unfollow another' do
+      @user.should respond_to(:unfollow!)
+    end
+
+    it 'creates a relationship when a user follows another user' do
+      @user.follow!(@followed)
+      @user.should be_following(@followed)
+    end
+
+    it 'destroys a relationship when a user unfollows another user' do
+      @user.follow!(@followed)
+      @user.unfollow!(@followed)
+      @user.should_not be_following(@followed)
+    end
+
+    it 'returns a list of following users' do
+      @user.follow!(@followed)
+      @user.following.should include(@followed)
+    end
+
+    it 'returns a list of followers' do
+      @user.follow!(@followed)
+      @followed.followers.should include(@user)
+    end
+  end
 end

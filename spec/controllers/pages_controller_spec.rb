@@ -53,6 +53,21 @@ describe PagesController do
           response.should have_selector('span.microposts', :content => '2 microposts')
         end
       end
+
+      context 'with followers/followings' do
+        before(:each) do
+          other_user = Factory(:user, :email => Factory.next(:email))
+          other_user.follow!(@user)
+        end
+
+        it 'has the correct follower/following counts' do
+          get :home
+          response.should have_selector('a', :href => following_user_path(@user),
+                                             :content => '0 following')
+          response.should have_selector('a', :href => followers_user_path(@user),
+                                             :content => '1 following')
+        end
+      end
     end
   end
 
