@@ -30,7 +30,10 @@ end
 
 def make_microposts
   User.find(:all, :limit => 6).each do |user|
-    50.times {|i| user.microposts.create!(:content => Faker::Lorem.sentence(5))}
+    50.times do |i|
+      m = user.microposts.create!(:content => Faker::Lorem.sentence(5))
+      m.update_attribute(:created_at, Time.now - rand(604800))
+    end
   end
 end
 
